@@ -1,8 +1,8 @@
 # Things to do
 
 - [ ] API
-  - [ ] Add todo ownership and authorized access
-  - [ ] Add app configuration using file / env variables
+  - [x] Add todo ownership and authorized access
+  - [x] Add app configuration using file / env variables
   - [ ] Implement admin / privileged functionality
 - [ ] Tests
   - [ ] pytest unit tests
@@ -12,3 +12,4 @@
   - [ ] python
   - [ ] nginx reverse proxy
 - [ ] Documentation
+- [ ] Logging

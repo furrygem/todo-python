@@ -82,7 +82,7 @@ def generate_auth_token(user: User) -> str:
             "name": user.name,
             "iat": now,
             "exp": now + datetime.timedelta(minutes=3),
-            "permissions": user.permissions,
+            "permissions": [int(p) for p in user.permissions],
         }, algorithm=api.config.jwt_algorithm, key=api.config.jwt_encode_key
     )
 
@@ -98,9 +98,9 @@ def generate_new_token_pair(db: Session, token_refresh_request: TokenRefreshRequ
     """Generate new token pair and invalidate request refresh token
 
     Generate new auth/refresh tokens pair, and invalidates token specified in
-    the requset, adds new generated token as it's child. If token was already
+    the request, adds new generated token as it's child. If token was already
     invalidated, invalidate the whole token family
-    
+
 
     Args:
         db (Session): sqlalchemy session

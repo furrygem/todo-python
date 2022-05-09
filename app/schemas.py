@@ -6,6 +6,7 @@ class TodoSchema(BaseModel):
     id: int
     name: str
     description: str
+    owner: int
 
     class Config:
         orm_mode = True

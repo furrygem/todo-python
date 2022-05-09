@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from sqlite3 import IntegrityError
 from typing import List
 from sqlalchemy.orm import Session
 from app.models import RefreshToken, Todo, User
@@ -10,8 +11,15 @@ def get_todos(db: Session, offset: int, limit: int) -> List[Todo]:
     return result
 
 
-def create_todo(db: Session, todo: TodoCreateSchema) -> Todo:
-    todo_orm = Todo(**todo.dict())
+def get_todos_for_user(db: Session, offset: int, limit: int, user_id: int) -> List[Todo]:
+    result = db.query(Todo).filter(Todo.owner == user_id).offset(offset).limit(limit).all()
+    return result
+
+
+def create_todo(db: Session, todo: TodoCreateSchema, user_id: int) -> Todo:
+    todo_orm = Todo(**todo.dict(), done=False, owner=user_id)
+    if todo_name_exists_for_user(db, todo.name, user_id):
+        raise IntegrityError("Todo name exists in the user scope")
     db.add(todo_orm)
     db.commit()
     db.refresh(todo_orm)
@@ -20,6 +28,19 @@ def create_todo(db: Session, todo: TodoCreateSchema) -> Todo:
 
 def get_todo_by_id(db: Session, id: int) -> Todo:
     result = db.query(Todo).filter(Todo.id == id).first()
+    return result
+
+
+def todo_name_exists_for_user(db: Session, name: str, user_id: int) -> bool:
+    n = db.query(Todo.name).filter(Todo.name == name, Todo.owner == user_id)\
+        .count()
+    if n > 0:
+        return True
+    return False
+
+
+def get_todo_by_name(db: Session, name: str, user_id: int) -> Todo:
+    result = db.query(Todo).filter(Todo.name == name, Todo.owner == user_id).first()
     return result
 
 
