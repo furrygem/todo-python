@@ -4,14 +4,14 @@ import bcrypt
 import jwt
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
-from app.schemas import TokenPair, UserInsertSchema, UserPermissionsEnum
-from app.schemas import TokenRefreshRequest
-from app.models import User
-from app.crud import get_user_by_username, insert_user, refresh_token_used
-from app.crud import save_refresh_token, get_refresh_token
-from app.crud import deactivate_token_family
-from app.crud import get_user_by_id, add_child_refresh_token
-from app import api
+from .schemas import TokenPair, UserInsertSchema, UserPermissionsEnum
+from .schemas import TokenRefreshRequest
+from .models import User
+from ..crud import get_user_by_username, insert_user, refresh_token_used
+from ..crud import save_refresh_token, get_refresh_token
+from ..crud import deactivate_token_family
+from ..crud import get_user_by_id, add_child_refresh_token
+from . import config
 
 
 def authenticate_user_password(db: Session,
@@ -75,7 +75,7 @@ def register_user(db: Session,
 
 def generate_auth_token(user: User) -> str:
     now = datetime.datetime.now()
-    print(f"jwt encode key{ api.config.jwt_encode_key }")
+    print(f"jwt encode key{ config.jwt_encode_key }")
     token = jwt.encode(
         payload={
             "sub": user.id,
@@ -83,7 +83,7 @@ def generate_auth_token(user: User) -> str:
             "iat": now,
             "exp": now + datetime.timedelta(minutes=3),
             "permissions": [int(p) for p in user.permissions],
-        }, algorithm=api.config.jwt_algorithm, key=api.config.jwt_encode_key
+        }, algorithm=config.jwt_algorithm, key=config.jwt_encode_key
     )
 
     return token
@@ -99,7 +99,8 @@ def generate_new_token_pair(db: Session, token_refresh_request: TokenRefreshRequ
 
     Generate new auth/refresh tokens pair, and invalidates token specified in
     the request, adds new generated token as it's child. If token was already
-    invalidated, invalidate the whole token family
+    invalidated, invalidate the whole token family. Checks if the token is
+    expired
 
 
     Args:
@@ -109,6 +110,7 @@ def generate_new_token_pair(db: Session, token_refresh_request: TokenRefreshRequ
     Raises:
         HTTPException: Token is not in the database
         HTTPException: Refresh token is invalid, amount of children chain
+        HTTPException: Refresh token has expired
         HTTPException: User with user_id not found
 
     Returns:
@@ -116,15 +118,19 @@ def generate_new_token_pair(db: Session, token_refresh_request: TokenRefreshRequ
     """
     token = get_refresh_token(db, token_refresh_request.refresh_token)
     if not token:
-        raise HTTPException(status_code=403, detail="Refresh token can not be accetpted")
+        raise HTTPException(status_code=403,
+                            detail="Refresh token can not be accepted")
     if not token.active:
         n = deactivate_token_family(db, token)
-        raise HTTPException(status_code=403, detail=f"Refresh token invalid. {n}")
+        raise HTTPException(status_code=403,
+                            detail=f"Refresh token invalid. {n}")
+    if token.not_after < datetime.datetime.now():
+        raise HTTPException(status_code=403, detail="Refresh token expired")
 
     user_id = token.user_id
     user = get_user_by_id(db, user_id)
     if not user:
-        raise HTTPException(status_code=403, detail=f"Token for invalid user")
+        raise HTTPException(status_code=403, detail="Token for invalid user")
 
     auth_token = generate_auth_token(user)
     refresh_token = generate_refresh_token()
@@ -150,8 +156,8 @@ def verify_auth_token(request: Request):
         if stoken[0].lower() == "token":
             token_decoded = jwt.decode(
                 stoken[1],
-                key=api.config.jwt_decode_key,
-                algorithms=api.config.jwt_accept_algorithms
+                key=config.jwt_decode_key,
+                algorithms=config.jwt_accept_algorithms
             )
             return token_decoded
         raise HTTPException(status_code=401, detail="No Token")
@@ -162,3 +168,16 @@ def verify_auth_token(request: Request):
         raise HTTPException(status_code=401, detail="Token Expired")
     except jwt.DecodeError:
         raise HTTPException(status_code=403, detail="Invalid Token")
+
+
+def bcrypt_password(password: str) -> str:
+    """returns bcrypt hash of specified password
+
+    Args:
+        password (str): plaintext password to hash
+
+    Returns:
+        str: hash value
+    """
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode(), salt).decode()

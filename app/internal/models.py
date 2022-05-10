@@ -1,6 +1,6 @@
 import enum
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, DateTime
-from app.db import Base
+from app.internal.db import Base
 
 
 class Todo(Base):

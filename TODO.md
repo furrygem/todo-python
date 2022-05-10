@@ -1,9 +1,9 @@
 # Things to do
 
-- [ ] API
-  - [x] Add todo ownership and authorized access
-  - [x] Add app configuration using file / env variables
-  - [ ] Implement admin / privileged functionality
+- [x] API
+  - [x] <p style="color: grey; text-decoration: line-through; display: inline-block">Add todo ownership and authorized access</p>
+  - [x] <p style="color: grey; text-decoration: line-through; display: inline-block">Add app configuration using file / env variables</p>
+  - [x] <p style="color: grey; text-decoration: line-through; display: inline-block">Implement admin / privileged functionality</p>
 - [ ] Tests
   - [ ] pytest unit tests
   - [ ] github actions

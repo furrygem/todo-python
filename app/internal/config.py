@@ -3,6 +3,11 @@ from yamldataclassconfig import YamlDataClassConfig
 
 
 class Config:
+    def __new__(cls, yaml_config_file: str, *args, **kwargs):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(Config, cls).__new__(cls, *args, **kwargs)
+        return cls.instance
+
     @dataclass
     class ConfigData(YamlDataClassConfig):
         jwt_encode_key_file: str | None = None

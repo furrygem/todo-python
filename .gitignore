@@ -2,3 +2,4 @@ db.sqlite
 __pycache__/
 dist/
 *secret.txt
+*.pyc
