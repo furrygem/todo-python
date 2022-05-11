@@ -1,11 +1,11 @@
 from sqlalchemy.engine import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from app import api
+from . import config
 
 
 # URL = "sqlite:///db.sqlite3"
-URL = api.config.database_url
+URL = config.database_url
 
 engine = create_engine(URL, echo=True, future=True)
 

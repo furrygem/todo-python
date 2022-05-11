@@ -1,17 +1,29 @@
 from datetime import datetime, timedelta
+from pprint import pprint
+from sqlite3 import IntegrityError
 from typing import List
 from sqlalchemy.orm import Session
-from app.models import RefreshToken, Todo, User
-from app.schemas import TodoCreateSchema, TodoUpdateSchema, UserInsertSchema
+from app.internal.models import RefreshToken, Todo, User
+from app.internal.schemas import TodoCreateSchema, TodoUpdateSchema, UserInsertSchema
+from app.internal.schemas import UserFullSchema
 
+
+# todos
 
 def get_todos(db: Session, offset: int, limit: int) -> List[Todo]:
     result = db.query(Todo).offset(offset).limit(limit).all()
     return result
 
 
-def create_todo(db: Session, todo: TodoCreateSchema) -> Todo:
-    todo_orm = Todo(**todo.dict())
+def get_todos_for_user(db: Session, offset: int, limit: int, user_id: int) -> List[Todo]:
+    result = db.query(Todo).filter(Todo.owner == user_id).offset(offset).limit(limit).all()
+    return result
+
+
+def create_todo(db: Session, todo: TodoCreateSchema, user_id: int) -> Todo:
+    todo_orm = Todo(**todo.dict(), done=False, owner=user_id)
+    if todo_name_exists_for_user(db, todo.name, user_id):
+        raise IntegrityError("Todo name exists in the user scope")
     db.add(todo_orm)
     db.commit()
     db.refresh(todo_orm)
@@ -23,10 +35,25 @@ def get_todo_by_id(db: Session, id: int) -> Todo:
     return result
 
 
+def todo_name_exists_for_user(db: Session, name: str, user_id: int) -> bool:
+    n = db.query(Todo.name).filter(Todo.name == name, Todo.owner == user_id)\
+        .count()
+    if n > 0:
+        return True
+    return False
+
+
+def get_todo_by_name(db: Session, name: str, user_id: int) -> Todo:
+    result = db.query(Todo).filter(Todo.name == name, Todo.owner == user_id).first()
+    return result
+
+
 def update_todo_by_id(db: Session, id: int, update: TodoUpdateSchema) -> Todo:
     todo = db.query(Todo).filter(Todo.id == id).first()
-    todo.name = update.name if update.name else todo.name
-    todo.description = update.description if update.description else todo.description
+    if not todo:
+        return todo
+    for var, value in vars(update).items():
+        setattr(todo, var, value) if value else None
     db.commit()
     db.refresh(todo)
     return todo
@@ -36,6 +63,9 @@ def delete_todo_by_id(db: Session, id: int) -> int:
     deleted = db.query(Todo).filter(Todo.id == id).delete()
     db.commit()
     return deleted
+
+
+# users
 
 
 def get_user_by_username(db: Session, username: str) -> User:
@@ -48,6 +78,11 @@ def get_user_by_id(db: Session, id: int) -> User:
     return user
 
 
+def list_users(db: Session, offset: int, limit: int) -> list[UserFullSchema]:
+    users = db.query(User).offset(offset).limit(limit).all()
+    return users
+
+
 def insert_user(db: Session, user: UserInsertSchema) -> User:
     user_orm = User(**user.dict())
     user_orm.permissions = [int(i) for i in user.permissions]
@@ -55,6 +90,26 @@ def insert_user(db: Session, user: UserInsertSchema) -> User:
     db.commit()
     db.refresh(user_orm)
     return user_orm
+
+
+def update_user(db: Session, user_id: int, update: UserInsertSchema) -> User:
+    user = get_user_by_id(db, user_id)
+    if not user:
+        return user
+    for var, value in vars(update):
+        setattr(user, var, value) if value else None
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def delete_user(db: Session, user_id: int) -> int:
+    removed = db.query(User).filter(User.id == user_id).delete()
+    db.commit()
+    return removed
+
+
+# refresh tokens
 
 
 def refresh_token_used(db: Session, token: str) -> bool:
@@ -110,6 +165,7 @@ def disable_token(db: Session, token: str) -> RefreshToken:
 def deactivate_token_family(db: Session, root_token: RefreshToken) -> int:
     invalidated_count = 0
     while root_token.token_child:
+        pprint(root_token)
         root_token = disable_token(db, root_token.token_child)
         invalidated_count += 1
 

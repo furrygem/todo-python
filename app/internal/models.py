@@ -1,6 +1,6 @@
 import enum
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text, DateTime
-from app.db import Base
+from app.internal.db import Base
 
 
 class Todo(Base):
@@ -9,6 +9,8 @@ class Todo(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String)
+    done = Column(Boolean)
+    owner = Column(Integer, index=True)
 
 
 class Permissions(enum.Enum):
