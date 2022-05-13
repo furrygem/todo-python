@@ -1,0 +1,5 @@
+database_url: "sqlite:///:memory:/"
+jwt_algorithm: "HS256"
+jwt_accept_algorithms: ["HS256"]
+jwt_encode_key_file: "jwt_secret.txt"
+jwt_decode_key_file: "jwt_secret.txt"
