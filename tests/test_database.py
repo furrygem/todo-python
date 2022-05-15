@@ -3,7 +3,8 @@ import pytest
 from sqlite3 import IntegrityError
 
 from app.internal.config import Config
-from app.crud import create_todo, delete_todo_by_id, delete_user, get_todo_by_name, list_users, update_user
+from app.crud import create_todo, delete_todo_by_id, delete_user
+from app.crud import get_todo_by_name, list_users, update_user
 from app.crud import get_todos_for_user, insert_user, get_user_by_username
 from app.crud import get_todos, update_todo_by_id, get_user_by_id
 from app.internal.schemas import TodoCreateSchema, UserInsertSchema
