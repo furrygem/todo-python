@@ -96,7 +96,7 @@ def update_user(db: Session, user_id: int, update: UserInsertSchema) -> User:
     user = get_user_by_id(db, user_id)
     if not user:
         return user
-    for var, value in vars(update):
+    for var, value in vars(update).items():
         setattr(user, var, value) if value else None
     db.commit()
     db.refresh(user)

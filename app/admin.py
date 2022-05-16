@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.main import get_db
 from app.internal.auth import verify_auth_token, register_user, bcrypt_password
-from app.internal.schemas import UserDTOSchemaAdmin, UserFullSchema 
+from app.internal.schemas import UserDTOSchemaAdmin, UserFullSchema
 from app.internal.schemas import UserPermissionsEnum, UserInsertSchema
 
 

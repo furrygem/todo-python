@@ -51,8 +51,10 @@ def create_todo(todo: TodoCreateSchema,
     try:
         result = crud.create_todo(db, todo, token['sub'])
     except IntegrityError:
-        raise HTTPException(status_code=400, detail=f"Todo Name Exists in the user scope")
-    resource_url = main_router.url_path_for('get_todo_by_id', todo_id=result.id)
+        raise HTTPException(status_code=400,
+                            detail="Todo Name Exists in the user scope")
+    resource_url = main_router.url_path_for('get_todo_by_id',
+                                            todo_id=result.id)
     response.headers['Location'] = resource_url
     return result
 
@@ -88,6 +90,7 @@ def delete_todo_by_id(
     todo_id: int,
     response: Response,
     db: Session = Depends(get_db),
+    token: dict[str, any] = Depends(verify_auth_token)
 ):
     # TODO check user write permissions
     permissions = token['permissions']
