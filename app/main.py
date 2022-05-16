@@ -88,6 +88,7 @@ def delete_todo_by_id(
     todo_id: int,
     response: Response,
     db: Session = Depends(get_db),
+    token: dict[str, any] = Depends(verify_auth_token)
 ):
     # TODO check user write permissions
     permissions = token['permissions']
