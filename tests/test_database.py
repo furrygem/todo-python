@@ -155,7 +155,6 @@ class TestUsers:
 
     def test_get_user_by_id(self):
         with SessionLocal() as db:
-            print("aaaaa 2")
             uid = get_user_by_username(db, 'test').id
             user = get_user_by_id(db, uid)  # type: ignore
         assert user
