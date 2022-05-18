@@ -45,7 +45,7 @@ def create_todo(todo: TodoCreateSchema,
                 response: Response,
                 db: Session = Depends(get_db),
                 token: dict[str, any] = Depends(verify_auth_token)):
-    permissions = token['permission']
+    permissions = token['permissions']
     if UserPermissionsEnum.personal_write not in permissions:
         raise HTTPException(status_code=403, detail="Not authorized")
     try:

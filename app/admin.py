@@ -28,7 +28,7 @@ def check_is_admin(token: dict[str, any], admin_permission: int) -> bool:
     return True
 
 
-@admin_router.get('/api/admin/users', response_model=list[UserFullSchema])
+@admin_router.get('/users', response_model=list[UserFullSchema])
 def admin_list_users(offset: int = 0,
                      limit: int = 100,
                      username_filter: str = "",
@@ -43,7 +43,7 @@ def admin_list_users(offset: int = 0,
     return users
 
 
-@admin_router.post('/api/admin/users', response_model=UserFullSchema)
+@admin_router.post('/users', response_model=UserFullSchema)
 def admin_insert_new_user(user: UserDTOSchemaAdmin,
                           db: Session = Depends(get_db),
                           token: dict[str, any] = Depends(verify_auth_token)):
@@ -53,7 +53,7 @@ def admin_insert_new_user(user: UserDTOSchemaAdmin,
     return user
 
 
-@admin_router.get('/api/admin/users/{user_id}')
+@admin_router.get('/users/{user_id}')
 def admin_get_user(user_id: int,
                    db: Session = Depends(get_db),
                    token: dict[str, any] = Depends(verify_auth_token)):
@@ -63,7 +63,7 @@ def admin_get_user(user_id: int,
     return user
 
 
-@admin_router.put('/api/admin/users/{user_id}', response_model=UserFullSchema)
+@admin_router.put('/users/{user_id}', response_model=UserFullSchema)
 def admin_update_user(user_id: int,
                       user_update: UserDTOSchemaAdmin,
                       db: Session = Depends(get_db),
@@ -79,7 +79,7 @@ def admin_update_user(user_id: int,
     return updated
 
 
-@admin_router.delete('/api/admin/users/{user_id}')
+@admin_router.delete('/users/{user_id}')
 def admin_delete_user(user_id: int,
                       db: Session = Depends(get_db),
                       token: dict[str, any] = Depends(verify_auth_token)):
